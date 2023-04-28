@@ -27,6 +27,7 @@ import 'katex/dist/katex.css'
 // import rehype2react from 'rehype-react'
 import { ThemeContext } from '../../util/themecontext'
 import { LinksByNodeId, NodeByCite, NodeById } from '../../pages'
+import axios from 'axios'
 
 export interface LinkProps {
   href: any
@@ -124,6 +125,29 @@ export const NormalLink = (props: NormalLinkProps) => {
   )
 }
 
+export const FeedbackLink = (props: NormalLinkProps) => {
+  const theme = useTheme()
+  const { emacsTheme } = useContext(ThemeContext)
+	const backgroundColor = emacsTheme[1]['bg-alt2']
+  const [feedbackColor, setFeedbackColor] = useState<string>('')
+  const { id, children } = props
+	useEffect(() => {
+		axios.get(`/extras/reviews/${id}`).then((res) => {
+			setFeedbackColor(res.data.color)
+		})
+	})
+  return (
+    <Link
+      fontWeight={500}
+			backgroundColor={feedbackColor}
+			paddingLeft="2px"
+			paddingRight="2px"
+    >
+      {children}
+    </Link>
+  )
+}
+
 export const PreviewLink = (props: LinkProps) => {
   const {
     href,
@@ -149,9 +173,8 @@ export const PreviewLink = (props: LinkProps) => {
   const type = href.replaceAll(/(.*?)\:.*/g, '$1')
 
   const extraNoteStyle = outline ? outlineNoteStyle : viewerNoteStyle
-  console.log(previewNode)
   const getText = () => {
-    fetch(`http://localhost:35901/node/${id}`)
+    fetch(`/orgroam/read/${id}`)
       .then((res) => {
         return res.text()
       })

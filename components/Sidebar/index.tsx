@@ -1,11 +1,12 @@
 import React, { useContext, useEffect, useRef, useState } from 'react'
+import { useRouter } from 'next/router'
 
 import { Toolbar } from './Toolbar'
 import { TagBar } from './TagBar'
 import { Note } from './Note'
 import { Title } from './Title'
 
-import { VStack, Flex, Box, IconButton } from '@chakra-ui/react'
+import { VStack, Flex, Box, Button, IconButton } from '@chakra-ui/react'
 import { Collapse } from './Collapse'
 import { Scrollbars } from 'react-custom-scrollbars-2'
 import {
@@ -104,6 +105,7 @@ const Sidebar = (props: SidebarProps) => {
   const [collapse, setCollapse] = useState(false)
   //maybe want to close it when clicking outside, but not sure
   //const outsideClickRef = useRef();
+	const router = useRouter()
   return (
     <Collapse
       animateOpacity={false}
@@ -212,6 +214,7 @@ const Sidebar = (props: SidebarProps) => {
                 alignItems="left"
                 bg="alt.100"
                 paddingLeft={4}
+                paddingBottom={4}
               >
                 <Title previewNode={previewRoamNode} />
                 <TagBar
@@ -245,4 +248,179 @@ const Sidebar = (props: SidebarProps) => {
   )
 }
 
-export default Sidebar
+export interface OrgViewProps {
+  nodeById: NodeById
+  previewNode: NodeObject
+  setPreviewNode: any
+  linksByNodeId: LinksByNodeId
+  nodeByCite: NodeByCite
+  setSidebarHighlightedNode: any
+  canUndo: any
+  canRedo: any
+  resetPreviewNode: any
+  previousPreviewNode: any
+  nextPreviewNode: any
+  openContextMenu: any
+  filter: typeof initialFilter
+  setFilter: any
+  tagColors: TagColors
+  setTagColors: any
+  macros?: { [key: string]: string }
+  attachDir: string
+  useInheritance: boolean
+}
+
+const OrgView = (props: OrgViewProps) => {
+  const {
+    previewNode,
+    setPreviewNode,
+    nodeById,
+    linksByNodeId,
+    nodeByCite,
+    setSidebarHighlightedNode,
+		canUndo,
+		canRedo,
+    resetPreviewNode,
+    previousPreviewNode,
+    nextPreviewNode,
+		openContextMenu,
+    filter,
+    setFilter,
+    tagColors,
+    setTagColors,
+    macros,
+    attachDir,
+    useInheritance,
+  } = props
+
+  const { highlightColor } = useContext(ThemeContext)
+  const [previewRoamNode, setPreviewRoamNode] = useState<OrgRoamNode | undefined>()
+  const [sidebarWidth, setSidebarWidth] = usePersistantState<number>('sidebarWidth', 400)
+
+  useEffect(() => {
+    if (!previewNode?.id) {
+      return
+    }
+    setPreviewRoamNode(previewNode as OrgRoamNode)
+  }, [previewNode?.id])
+
+
+  const [justification, setJustification] = usePersistantState('justification', 1)
+  const [outline, setOutline] = usePersistantState('outline', false)
+  const justificationList = ['justify', 'start', 'end', 'center']
+  const [font, setFont] = useState('sans serif')
+  const [indent, setIndent] = useState(0)
+  const [collapse, setCollapse] = useState(false)
+  //maybe want to close it when clicking outside, but not sure
+  //const outsideClickRef = useRef();
+  return (
+		<Flex flexDir="column" h="100vh" pl={2} color="black" width="100%">
+			<Flex
+				//whiteSpace="nowrap"
+				// overflow="hidden"
+				// textOverflow="ellipsis"
+				pl={2}
+				alignItems="center"
+				color="black"
+				width="100%"
+			>
+				<Flex pt={1} flexShrink={0}>
+					<Toolbar
+						{...{
+							setJustification,
+							setIndent,
+							setFont,
+							justification,
+							setPreviewNode,
+							canUndo,
+							canRedo,
+							resetPreviewNode,
+							previousPreviewNode,
+							nextPreviewNode,
+							outline,
+							setOutline,
+							collapse,
+							setCollapse,
+						}}
+					/>
+				</Flex>
+				<Flex
+					whiteSpace="nowrap"
+					textOverflow="ellipsis"
+					overflow="hidden"
+					onContextMenu={(e) => {
+						e.preventDefault()
+						openContextMenu(previewNode, e)
+					}}
+				></Flex>
+				<Flex flexDir="row" ml="auto">
+					<IconButton
+						// eslint-disable-next-line react/jsx-no-undef
+						m={1}
+						icon={<BiDotsVerticalRounded />}
+						aria-label="Options"
+						variant="subtle"
+						onClick={(e) => {
+						}}
+					/>
+				</Flex>
+			</Flex>
+			<Scrollbars
+				//autoHeight
+				//autoHeightMax={600}
+				autoHide
+				renderThumbVertical={({ style, ...props }) => (
+					<Box
+						style={{
+							...style,
+							borderRadius: 0,
+							// backgroundColor: highlightColor,
+						}}
+						//color="alt.100"
+						{...props}
+					/>
+				)}
+			>
+				{previewRoamNode && (
+					<VStack
+						flexGrow={1}
+						// overflowY="scroll"
+						alignItems="left"
+						paddingLeft={4}
+						paddingBottom={4}
+					>
+						<Title previewNode={previewRoamNode} />
+						<TagBar
+							{...{ filter, setFilter, tagColors, setTagColors, openContextMenu, previewNode }}
+						/>
+						<Note
+							{...{
+								setPreviewNode,
+								previewNode,
+								nodeById,
+								nodeByCite,
+								setSidebarHighlightedNode,
+								justification,
+								justificationList,
+								linksByNodeId,
+								openContextMenu,
+								outline,
+								setOutline,
+								collapse,
+								macros,
+								attachDir,
+								useInheritance,
+							}}
+							maxWidth="100em"
+						/>
+					</VStack>
+				)}
+			</Scrollbars>
+		</Flex>
+  )
+}
+
+export { 
+	Sidebar,
+	OrgView
+}

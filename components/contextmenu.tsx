@@ -1,4 +1,5 @@
 import React, { useRef } from 'react'
+import { useRouter } from 'next/router'
 import {
   Box,
   Menu,
@@ -83,6 +84,7 @@ export const ContextMenu = (props: ContextMenuProps) => {
   } = props
   const { isOpen, onOpen, onClose } = useDisclosure()
   const copyRef = useRef<any>()
+	const router = useRouter()
   return (
     <>
       <Menu defaultIsOpen closeOnBlur={false} onClose={() => menuClose()}>
@@ -128,9 +130,13 @@ export const ContextMenu = (props: ContextMenuProps) => {
               {!target?.properties?.FILELESS ? (
                 <MenuItem
                   icon={<EditIcon />}
-                  onClick={() => openNodeInEmacs(target as OrgRoamNode, webSocket)}
+                  onClick={() => {
+										if (target.id){
+											router.push(`/document?id=${target.id}`)
+										}
+									}}
                 >
-                  Open in Emacs
+                  Open
                 </MenuItem>
               ) : (
                 <MenuItem icon={<AddIcon />} onClick={() => createNodeInEmacs(target, webSocket)}>

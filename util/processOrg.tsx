@@ -25,9 +25,9 @@ import remarkExtractFrontMatter from 'remark-extract-frontmatter'
 import remarkSectionize from 'remark-sectionize'
 import remarkRehype from 'remark-rehype'
 
-import { PreviewLink } from '../components/Sidebar/Link'
+import { PreviewLink, FeedbackLink } from '../components/Sidebar/Link'
 import { LinksByNodeId, NodeByCite, NodeById } from '../pages'
-import React, { createContext, ReactNode, useMemo } from 'react'
+import React, { createContext, useContext, ReactNode, useMemo } from 'react'
 import { OrgImage } from '../components/Sidebar/OrgImage'
 import { Section } from '../components/Sidebar/Section'
 import { NoteContext } from './NoteContext'
@@ -35,8 +35,9 @@ import { OrgRoamLink, OrgRoamNode } from '../api'
 
 // @ts-expect-error non-ESM unified means no types
 import { toString } from 'hast-util-to-string'
-import { Box, chakra } from '@chakra-ui/react'
+import { Text, Box, chakra } from '@chakra-ui/react'
 import { normalizeLinkEnds } from './normalizeLinkEnds'
+import { SelectionContext } from '../pages/document'
 
 export interface ProcessedOrgProps {
   nodeById: NodeById
@@ -55,6 +56,13 @@ export interface ProcessedOrgProps {
 }
 
 export const ProcessedOrg = (props: ProcessedOrgProps) => {
+  const context = useContext(SelectionContext);
+	function handleMouseUp(event) {
+			const text = window.getSelection().toString().trim()
+			if(text.length > 0){
+				context?.openReviewMenu(text, event)
+			}
+	}
   const {
     nodeById,
     setSidebarHighlightedNode,
@@ -145,6 +153,15 @@ export const ProcessedOrg = (props: ProcessedOrgProps) => {
           // eslint-disable-next-line react/display-name
           components: {
             a: ({ children, href }) => {
+							let type = href.split(':')[0]
+							let id = href.split(':')[1]
+							console.log(type)
+							if (type == 'review')
+								return (
+									<FeedbackLink id={id}>
+										{children}
+									</FeedbackLink>
+								)
               return (
                 <PreviewLink
                   nodeByCite={nodeByCite}
@@ -193,9 +210,15 @@ export const ProcessedOrg = (props: ProcessedOrgProps) => {
                 {children as React.ReactElement[]}
               </chakra.blockquote>
             ),
-            p: ({ children }) => {
-              return <p lang="en">{children as ReactNode}</p>
-            },
+            p: ({ children }) => (
+							<Text 
+								lang="en" 
+								onMouseUp={handleMouseUp}
+								style={{fontSize: 18, hyphens: 'none'}}
+							>
+								{children as ReactNode}
+							</Text>
+            ),
           },
         }),
     [previewNode?.id],

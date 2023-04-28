@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { LinksByNodeId, NodeByCite, NodeById } from '../pages/index'
 import { ProcessedOrg } from './processOrg'
+import axios from 'axios'
 
 export interface UniOrgProps {
   nodeById: NodeById
@@ -37,16 +38,15 @@ export const UniOrg = (props: UniOrgProps) => {
 
   const id = encodeURIComponent(encodeURIComponent(previewNode.id))
   useEffect(() => {
-    fetch(`http://localhost:35901/node/${id}`)
+    axios.get(`orgroam/read/${id}`)
       .then((res) => {
-        return res.text()
+        return res.data
       })
       .then((res) => {
         if (res === '') {
           return '(empty node)'
         }
         if (res !== 'error') {
-          console.log(res)
           setPreviewText(res)
         }
       })
